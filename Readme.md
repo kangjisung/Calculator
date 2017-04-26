@@ -7,3 +7,20 @@
 `sudo pip install unittest2`
 
 `sudo pip install opencv-python>=3.2.0.6`
+
+## Project Structure
+```
+.
+├── Core
+│   ├── Main Engine Sources
+├── ProgramMain.py
+├── Readme.md
+├── Setting
+│   ├── Const Various Inside Here
+├── Tests
+│   ├── Every Test Case Resource Inside Here
+└── Utils
+    ├── Process Help Code Inside Here
+
+14 directories, 86 files
+```
