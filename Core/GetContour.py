@@ -17,8 +17,7 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    #y = int(minY * 0.62 + maxY * 0.38)
-    y = int (173*(minY*0.62 + maxY*0.38)/(maxY-minY))
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO))
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
 
@@ -191,7 +190,14 @@ def SimplifyImage(image):
 # =====(반복문)=====
 # finalDifference는 처음 받은 differenceImage와 수정한 이미지인 afterDifference의 개선(쇠퇴)부분을 보여준다
 def FillDifferenceImage(differenceImage):
-    afterDifference = np.copy(differenceImage)
+    height, width = differenceImage.shape[:]
+    afterDifference = np.ndarray((height + Setting.DefineManager.ADD_IMAGE_HEIGHT * 2,width + Setting.DefineManager.ADD_IMAGE_WIDTH * 2),
+                                 dtype = differenceImage.dtype)
+    afterDifference[:]=Setting.DefineManager.SET_IMAGE_BLACK_COLOR
+    afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT + height + 15:,
+    Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
+    afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
+    Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width] = differenceImage[:]
     beforeDifference = np.ndarray(afterDifference.shape)
     alpha = 10
     while True:
@@ -203,12 +209,14 @@ def FillDifferenceImage(differenceImage):
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contourLength = len(GetContour(afterDifference)[0])
+        ccv.ShowImagesWithName([beforeDifference,afterDifference],[],700)
         if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
-
+    afterDifference = afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
+    Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width]
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
 
-    #ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
+    ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
     return afterDifference
 
 def GetObjectImage(beforeImage, afterImage):
@@ -238,6 +246,7 @@ def GetObjectImage(beforeImage, afterImage):
     V = cv2.split(beforeHSV)[2]
     V = GetSharpImage(V)[1]
     #V = cv2.GaussianBlur(GetSharpImage(V)[1], (0, 0), sigmak)
+    #V[:] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     beforeHSV = HSVChannelsChange(beforeHSV,V)
     beforeHSV = cv2.cvtColor(beforeHSV, cv2.COLOR_HSV2BGR)
     beforeHSVGray = cv2.cvtColor(beforeHSV, cv2.COLOR_BGR2GRAY)
@@ -245,6 +254,7 @@ def GetObjectImage(beforeImage, afterImage):
     V = cv2.split(afterHSV)[2]
     V = GetSharpImage(V)[1]
     #V = cv2.GaussianBlur(GetSharpImage(V)[1], (0, 0), sigmak)
+    #V[:] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     afterHSV = HSVChannelsChange(afterHSV,V)
     afterHSV = cv2.cvtColor(afterHSV, cv2.COLOR_HSV2BGR)
     afterHSVGray = cv2.cvtColor(afterHSV, cv2.COLOR_BGR2GRAY)
